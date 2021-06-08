@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>맛집 리뷰비교</title>
+    <meta charset="UTF-8">
+    {% block css %}
+    {% endblock css %}
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/earlyaccess/nanummyeongjo.css">
+</head>
+
+<body>
+    <div id="warp">
+        <div id="header">
+            <div id="nav">
+                <div class="logo">
+                    {% comment %} <a href={% url 'post-list' %}><img src="{% static 'posts/images/logo.png' %}"></a>
+                    {% endcomment %}
+                </div>
+            </div>
+            {% block review_header %}
+            {% endblock review_header %}
+        </div>
+        {% block logo_text %}
+        {% endblock logo_text %}
+        <div id="content">
+            <div class="container">
+                {% block content %}
+                {% endblock content %}
+            </div>
+        </div>
+        <div id="footer">
+            <div class="footer">
+                <p>맛집 리뷰 비교</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

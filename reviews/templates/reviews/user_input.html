@@ -1,0 +1,33 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'reviews/css/user_input.css' %}">
+{% endblock css %}
+
+{% block review_header %}
+<div class="container">
+    <h1>맛집 선택하기</h1>
+</div>
+{% endblock review_header %}
+
+{% block content %}
+<form method="post">{% csrf_token %}
+    <div class="submit">
+        <input type="submit" value="결과확인">
+    </div>
+    <div class="editor">
+        <p>{{form.restaurant}}</p>
+        {% for error in form.restaurant.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
+        <p>{{form.address}}</p>
+        {% for error in form.address.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
+    </div>
+    <div class="checker">
+        <p></p>
+    </div>
+</form>
+{% endblock content %}
