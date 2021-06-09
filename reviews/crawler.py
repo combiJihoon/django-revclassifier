@@ -5,8 +5,10 @@ import requests
 from urllib.parse import quote_plus
 from bs4 import BeautifulSoup
 
+from pyvirtualdisplay import Display
 
 from selenium import webdriver
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
@@ -18,14 +20,28 @@ from selenium.common.exceptions import NoSuchElementException
 kakao = 'https://map.kakao.com/'
 # naver url은 query 부분까지 나옴
 naver = 'https://m.map.naver.com/search2/search.naver?query='
-driver = webdriver.Chrome(
-    r"/Users/jihun/Mywork/RealClassifier/chromedriver")
-action = ActionChains(driver)
+
+# 해야하는 것
+# 가게가 없을 경우, 리뷰가 없을 경우 예외처리
+# 사용자 input 받고 checker 실행한 뒤 'driver'도 리턴해 줘야 함
 
 
-def kakao_checker(queryInput):
+def getDriver():
+    options = ChromeOptions()
+    options.add_argument('headless')
+    options.add_argument("disable-gpu")
+
+    driver = webdriver.Chrome(
+        r"/Users/jihun/Mywork/django-project/revclassifier/chromedriver")
+
+    return driver
+
+
+def kakao_checker(queryInput, driver):
     global kakao
+    # driver = getDriver()
 
+    driver.get(kakao)
     # kakaomap review 찾기
     driver.find_element_by_css_selector(
         '.query.tf_keyword').send_keys(queryInput)
@@ -43,13 +59,15 @@ def kakao_checker(queryInput):
     for restaurant in restaurants_to_be_list:
         restaurant_list.append(restaurant.text)
 
-    return restaurant_list
+    driver.quit()
+    return restaurant_list, driver
 
 
 def naver_checker(queryInput):
     global naver
     # plusUrl = '마북동 전주콩나물해장국'
     url = naver + queryInput
+    driver = getDriver()
     driver.get(url)
 
     # 원하는 음식점이 맞는지 확인 : 음식점 리스트 출력 및 선택
@@ -62,19 +80,19 @@ def naver_checker(queryInput):
     for restaurant in restaurants_to_be_list:
         restaurant_list.append(restaurant.text)
 
-    return restaurant_list
+    driver.quit()
+
+    return restaurant_list, driver
 
 
-def kakao_crawler(restaurant_list, restaurant_check):
-    global action
-
+def kakao_crawler(restaurant_list, restaurant_check, driver):
+    action = ActionChains(driver)
     my_xpath = restaurant_check
 
     # 4번째 자리(3번째 인덱스)에 항상 광고가 들어와 있음 -> 따라서 이 때부터 index를 변경해 줘야 함
     my_index = restaurant_list.index(my_xpath)
     if my_index >= 3:
         my_index += 1
-    print(my_index)
 
     # 해당 음식점 페이지로 이동 : '리뷰' 글씨 클릭해야 함
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
@@ -90,63 +108,80 @@ def kakao_crawler(restaurant_list, restaurant_check):
 
     # 총 평균 별점
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    ratings = soup.select('.grade_star')
+    # 총 평점 출력
+    try:
+        ratings = soup.select('.grade_star')
+        final_rating = ratings[1].text
+    except:
+        return ''
 
     count = 0
 
-    # 별점 출력
-    try:
-        final_rating = ratings[1].text
+    # 다음 페이지 클릭
+    # i는 1~ , j는 1~5 단위의 페이지
+    i = j = 1
+    pageNum = 1
+    count = 0
+    review_info = []
 
-        # 다음 페이지 클릭
-        # i는 1~ , j는 1~5 단위의 페이지
-        i = j = 1
-        pageNum = 1
-        count = 0
-        review_info = []
+    while True:
+        try:
+            reviewCrawler_kakao(review_info, driver)
+            # review_by_page.append(review_info)
 
-        while True:
-            try:
-                reviewCrawler_kakao(review_info)
-                # review_by_page.append(review_info)
-
-                print('현재 페이지: '+str(pageNum))
-                if count >= 100:
-                    break
-                try:
-                    element = driver.find_element_by_xpath(
-                        '//*[@id = "mArticle"]/div[5]/div[4]/div/a['+str(i)+']')
-                    driver.execute_script("arguments[0].click();", element)
-                # 2페이지까지 밖에 없을 경우 예외처리 후 크롤링
-                except:
-                    element = driver.find_element_by_xpath(
-                        '//*[@id = "mArticle"]/div[4]/div[4]/div/a')
-                    driver.execute_script("arguments[0].click();", element)
-                    time.sleep(2)
-                    reviewCrawler_kakao(review_info)
-                    break
-                # break
-                # 페이지 이동
-                if i == 5 and j == 1:
-                    i = 2
-                    j += 1
-                elif i == 6 and j >= 2:
-                    i = 2
-                    j += 1
-                else:
-                    i += 1
-                pageNum += 1
-                time.sleep(1)
-            except NoSuchElementException:
+            if count >= 100:
                 break
+            try:
+                element = driver.find_element_by_xpath(
+                    '//*[@id = "mArticle"]/div[5]/div[4]/div/a['+str(i)+']')
+                driver.execute_script("arguments[0].click();", element)
+            # 2페이지까지 밖에 없을 경우 예외처리 후 크롤링
+            except:
+                element = driver.find_element_by_xpath(
+                    '//*[@id = "mArticle"]/div[4]/div[4]/div/a')
+                driver.execute_script("arguments[0].click();", element)
+                time.sleep(2)
+                reviewCrawler_kakao(review_info, driver)
+                break
+            # break
+            # 페이지 이동
+            if i == 5 and j == 1:
+                i = 2
+                j += 1
+            elif i == 6 and j >= 2:
+                i = 2
+                j += 1
+            else:
+                i += 1
+            pageNum += 1
+            time.sleep(1)
+        except NoSuchElementException:
+            break
 
-    except IndexError:
-        print('아직 리뷰가 없습니다.')
+    review_info.sort()
 
-    return final_rating, review_info
+    # low
+    if len(review_info) > 10:
+        low_review_info = review_info[:6]
+    elif 0 < len(review_info) <= 10:
+        low_review_info = review_info[0]
+    elif len(review_info) == 0:
+        low_review_info = ''
+
+    # high
+    if len(review_info) > 10:
+        high_review_info = review_info[-6:]
+    elif 0 < len(review_info) <= 10:
+        high_review_info = review_info[-1]
+    elif len(review_info) == 0:
+        high_review_info = ''
+
+    driver.quit()
+
+    return final_rating, low_review_info, high_review_info
 
 
-def naver_crawler(restaurant_list, restaurant_check):
+def naver_crawler(restaurant_list, restaurant_check, driver):
     my_xpath = restaurant_check
     my_index = restaurant_list.index(my_xpath)
     # 해당 음식점 페이지로 이동
@@ -155,10 +190,13 @@ def naver_crawler(restaurant_list, restaurant_check):
     time.sleep(2)
 
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    ratings = soup.select(
-        '._1kUrA')
-
-    final_rating = ratings[0].text[2:6]
+    # 총 평점 구하기 : 없을 경우 리뷰도 없으므로 빈 문자열 리턴
+    try:
+        ratings = soup.select(
+            '._1kUrA')
+        final_rating = ratings[0].text[2:6]
+    except:
+        return ''
 
     # '스타벅스' 같은 경우 메뉴 바에 '선물하기'가 있어 '리뷰' 메뉴의 위치가 달라지게 된다.
     # 따라서, 아래와 같이 try & except로 예외처리를 한다.
@@ -207,10 +245,30 @@ def naver_crawler(restaurant_list, restaurant_check):
         if count >= 100:
             break
 
-    return final_rating, review_info
+    review_info.sort()
+
+    # low
+    if len(review_info) > 10:
+        low_review_info = review_info[-6:]
+    elif 0 < len(review_info) <= 10:
+        low_review_info = review_info[-1]
+    elif len(review_info) == 0:
+        low_review_info = ''
+
+    # high
+    if len(review_info) > 10:
+        high_review_info = review_info[-6:]
+    elif 0 < len(review_info) <= 10:
+        high_review_info = review_info[-1]
+    elif len(review_info) == 0:
+        high_review_info = ''
+
+    driver.quit()
+
+    return final_rating, low_review_info, high_review_info
 
 
-def reviewCrawler_kakao(review_info):
+def reviewCrawler_kakao(review_info, driver):
     global count
     # 별점, 리뷰, 날짜 출력
     soup = BeautifulSoup(driver.page_source, 'html.parser')

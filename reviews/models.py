@@ -1,6 +1,5 @@
 from django.db import models
 from .validators import validate_address, validate_symbols
-
 # Create your models here.
 
 # 검색할 것 : 지역명, 음식점명
@@ -15,7 +14,8 @@ class Review(models.Model):
                                   validate_symbols])  # max_length = 20 줄이기
     address = models.CharField(max_length=20, validators=[
                                validate_address])  # '동'까지
-    website = models.CharField(max_length=10)  # 네이버, 카카오, 자사
+    r_kakao = models.CharField(max_length=20)
+    r_naver = models.CharField(max_length=20)
     # 리뷰 크롤링 결과 파트
     final_rating = models.FloatField()
     rating = models.FloatField()

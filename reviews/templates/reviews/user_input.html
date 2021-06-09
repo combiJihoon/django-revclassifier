@@ -16,18 +16,16 @@
     <div class="submit">
         <input type="submit" value="결과확인">
     </div>
-    <div class="editor">
-        <p>{{form.restaurant}}</p>
-        {% for error in form.restaurant.errors %}
-        <p class="error">{{error}}</p>
-        {% endfor %}
-        <p>{{form.address}}</p>
-        {% for error in form.address.errors %}
-        <p class="error">{{error}}</p>
-        {% endfor %}
-    </div>
-    <div class="checker">
-        <p></p>
-    </div>
+    <p>{{form.restaurant}}</p>
+    {% for error in form.restaurant.errors %}
+    <p class="error">{{error}}</p>
+    {% endfor %}
+    <p>{{form.address}}</p>
+    {% for error in form.address.errors %}
+    <p class="error">{{error}}</p>
+    {% endfor %}
+    {% comment %} <div class="editor">
+
+    </div> {% endcomment %}
 </form>
 {% endblock content %}
