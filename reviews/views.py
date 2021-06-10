@@ -25,8 +25,8 @@ def user_input_kakao(request, review_id):
 
     review = Review.objects.get(id=review_id)
     restaurant = review.restaurant
-    address = review.address1 + review.address2 + review.address3
-    queryInput = address + restaurant
+    address = review.address1 + ' ' + review.address2 + ' ' + review.address3
+    queryInput = address + ' ' + restaurant
 
     driver = getDriver()
     restaurant_list, driver = kakao_checker(queryInput, driver)

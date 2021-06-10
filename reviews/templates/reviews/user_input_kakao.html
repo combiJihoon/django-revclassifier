@@ -10,15 +10,20 @@
     <h1>카카오 맛집이 맞는지 확인하기</h1>
 </div>
 {% endblock review_header %}
+{% block content %}
 <div class="container">
     <h1>{{restaurant}}</h1>
     <p>{{address}}</p>
-    {% for r_kakao in  restaurant_list%}
-    <p>r_kakao</p>
+    {% for r_kakao in restaurant_list%}
+    <p>{{r_kakao}}</p>
     {% endfor %}
 </div>
+{% endblock content %}
+
+
+{% comment %}
 {% block content %}
-{% comment %} <form method="post">{% csrf_token %}
+<form method="post">{% csrf_token %}
     <div class="submit">
         <input type="submit" value="맛집확인">
     </div>
@@ -30,6 +35,5 @@
         <p>{{form.r_kakao}}</p> # models.py에 r_kakao 추가하기
     </div>
 </form>
-{% endcomment %}
-
 {% endblock content %}
+{% endcomment %}
