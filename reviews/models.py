@@ -1,5 +1,5 @@
 from django.db import models
-from .validators import validate_address, validate_symbols
+from .validators import validate_address1, validate_address2, validate_address3, validate_symbols
 # Create your models here.
 
 # 검색할 것 : 지역명, 음식점명
@@ -11,16 +11,20 @@ from .validators import validate_address, validate_symbols
 
 class Review(models.Model):
     restaurant = models.CharField(max_length=20, validators=[
-                                  validate_symbols])  # max_length = 20 줄이기
-    address = models.CharField(max_length=20, validators=[
-                               validate_address])  # '동'까지
-    r_kakao = models.CharField(max_length=20)
-    r_naver = models.CharField(max_length=20)
+                                  validate_symbols], default='')  # max_length = 20 줄이기
+    address1 = models.CharField(max_length=10, validators=[
+        validate_address1], default='')  # '동'까지
+    address2 = models.CharField(max_length=10, validators=[
+        validate_address2], default='')  # '동'까지
+    address3 = models.CharField(max_length=10, validators=[
+        validate_address3], default='')  # '동'까지
+    r_kakao = models.CharField(max_length=20, default='')
+    r_naver = models.CharField(max_length=20, default='')
     # 리뷰 크롤링 결과 파트
-    final_rating = models.FloatField()
-    rating = models.FloatField()
-    comment = models.CharField(max_length=500)
-    date = models.DateField()
+    final_rating = models.FloatField(null=True)
+    rating = models.FloatField(null=True)
+    comment = models.CharField(max_length=500, default='')
+    date = models.DateField(null=True)
 
     def __str__(self):
         return self.restaurant

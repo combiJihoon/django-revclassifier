@@ -59,7 +59,6 @@ def kakao_checker(queryInput, driver):
     for restaurant in restaurants_to_be_list:
         restaurant_list.append(restaurant.text)
 
-    driver.quit()
     return restaurant_list, driver
 
 

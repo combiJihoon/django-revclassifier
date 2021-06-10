@@ -1,9 +1,19 @@
 from django.core.exceptions import ValidationError
 
 
-def validate_address(value):
-    if ("동" not in value) or ("읍" not in value) or ("면" not in value):
-        raise ValidationError("주소의 동/읍/면 중 하나가 꼭 포함되어야 합니다.", code='invalid')
+def validate_address1(value):
+    if "시" not in value:
+        raise ValidationError("~'시'로 입력하세요", code='invalid')
+
+
+def validate_address2(value):
+    if "구" not in value:
+        raise ValidationError("~'구'로 입력하세요", code='invalid')
+
+
+def validate_address3(value):
+    if "동" not in value:
+        raise ValidationError("~'동'으로 입력하세요", code='invalid')
 
 
 def validate_symbols(value):

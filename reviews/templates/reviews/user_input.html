@@ -4,6 +4,9 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'reviews/css/user_input.css' %}">
 {% endblock css %}
+{% block js %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+{% endblock js %}
 
 {% block review_header %}
 <div class="container">
@@ -14,18 +17,53 @@
 {% block content %}
 <form method="post">{% csrf_token %}
     <div class="submit">
-        <input type="submit" value="결과확인">
+        <input id="submit_btn" type="submit" value="결과확인">
     </div>
-    <p>{{form.restaurant}}</p>
-    {% for error in form.restaurant.errors %}
-    <p class="error">{{error}}</p>
-    {% endfor %}
-    <p>{{form.address}}</p>
-    {% for error in form.address.errors %}
-    <p class="error">{{error}}</p>
-    {% endfor %}
-    {% comment %} <div class="editor">
+    <div class="editor">
+        <p id="restaurant">{{form.restaurant}}</p>
+        {% for error in form.restaurant.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
 
-    </div> {% endcomment %}
+        <p id="address">{{form.address1}}</p>
+        {% for error in form.address1.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
+
+        <p id="address">{{form.address2}}</p>
+        {% for error in form.address2.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
+
+        <p id="address">{{form.address3}}</p>
+        {% for error in form.address3.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
+    </div>
 </form>
 {% endblock content %}
+
+{% comment %} <script>
+    $('#submit_btn').click(function () {
+                let input1 = $('#restaurant').val();
+                let input2 = $('#address').val();
+                $.ajax({
+                    url: {
+                        %
+                        url 'user_input_kakao'
+                        review.id %
+                    }, //보낼 유알엘 넣기
+                    type: 'get',
+                    data: {
+                        'restaurant': input1,
+                        'adress': input2
+                    },
+                    dataType: 'json',
+                }).done(function (data) {
+                    console.log(data);
+                    //성공시 코드 짜기
+                }).fail(function (err) {
+                        console.log(err, "!!!!!!!!!!");
+                    );
+                } //버튼클릭이벤트 end
+</script> {% endcomment %}

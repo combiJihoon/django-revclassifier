@@ -11,8 +11,11 @@
 </div>
 {% endblock review_header %}
 <div class="container">
-    <h1>{{review.restaurant}}</h1>
-    <p>{{review.address}}</p>
+    <h1>{{restaurant}}</h1>
+    <p>{{address}}</p>
+    {% for r_kakao in  restaurant_list%}
+    <p>r_kakao</p>
+    {% endfor %}
 </div>
 {% block content %}
 {% comment %} <form method="post">{% csrf_token %}
@@ -25,6 +28,8 @@
         <p>{{r_kakao}}</p>
         {% endfor %}
         <p>{{form.r_kakao}}</p> # models.py에 r_kakao 추가하기
-    </div> {% endcomment %}
-</form> {% endcomment %}
+    </div>
+</form>
+{% endcomment %}
+
 {% endblock content %}
