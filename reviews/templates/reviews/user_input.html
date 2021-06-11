@@ -17,7 +17,7 @@
 {% block content %}
 <form method="post">{% csrf_token %}
     <div class="submit">
-        <input id="submit_btn" type="submit" value="결과확인">
+        <input type="submit" value="결과확인">
     </div>
     <div class="editor">
         <p id="restaurant">{{form.restaurant}}</p>

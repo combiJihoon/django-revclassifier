@@ -18,7 +18,20 @@
     <p>{{r_kakao}}</p>
     {% endfor %}
 </div>
+
+<form method="post">{% csrf_token %}
+    <div class="submit">
+        <input id="submit_btn" type="submit" value="진짜결과확인">
+    </div>
+    <div class="editor">
+        <p id="r_kakao">{{form.r_kakao}}</p>
+        {% for error in form.r_kakao.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
+    </div>
+</form>
 {% endblock content %}
+
 
 
 {% comment %}

@@ -7,7 +7,8 @@ class ReviewForm(forms.ModelForm):
 
     class Meta:
         model = Review
-        fields = ['restaurant', 'address1', 'address2', 'address3']
+        fields = ['restaurant', 'address1', 'address2',
+                  'address3', 'r_kakao', 'r_naver']
         widgets = {
             'restaurant': forms.TextInput(attrs={
                 'placeholder': '맛집 이름을 입력하세요'

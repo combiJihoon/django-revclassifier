@@ -18,7 +18,8 @@ class Review(models.Model):
         validate_address2], default='')  # '동'까지
     address3 = models.CharField(max_length=10, validators=[
         validate_address3], default='')  # '동'까지
-    r_kakao = models.CharField(max_length=20, default='')
+    r_kakao = models.CharField(
+        max_length=20, default='', validators=[validate_symbols])
     r_naver = models.CharField(max_length=20, default='')
     # 리뷰 크롤링 결과 파트
     final_rating = models.FloatField(null=True)

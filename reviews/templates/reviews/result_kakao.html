@@ -1,0 +1,26 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'reviews/css/user_input.css' %}">
+{% endblock css %}
+
+{% block review_header %}
+<div class="container">
+    <h1>카카오 맛집 리뷰 분석</h1>
+</div>
+{% endblock review_header %}
+
+{% block content %}
+<div class="container">
+    <p>총 평점 : {{final_rating}}</p>
+
+    {% for low in low_review_info%}
+    <p>{{low}}</p>
+    {% endfor %}
+
+    {% for high in high_review_info%}
+    <p>{{high}}</p>
+    {% endfor %}
+</div>
+{% endblock content %}
