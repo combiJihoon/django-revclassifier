@@ -1,14 +1,15 @@
 from django import forms
-from .models import Review
+from .models import UserInput, CrawlResult
 from django.core.exceptions import ValidationError
 
 
-class ReviewForm(forms.ModelForm):
+class UserInputForm(forms.ModelForm):
+    # temp = forms.CharField(max_length=20, required=False)
 
     class Meta:
-        model = Review
+        model = UserInput
         fields = ['restaurant', 'address1', 'address2',
-                  'address3', 'r_kakao', 'r_naver']
+                  'address3', 'temp']
         widgets = {
             'restaurant': forms.TextInput(attrs={
                 'placeholder': '맛집 이름을 입력하세요'
@@ -21,6 +22,9 @@ class ReviewForm(forms.ModelForm):
             }),
             'address3': forms.TextInput(attrs={
                 'placeholder': '맛집 주소의 \'동\'까지 입력하세요'
+            }),
+            'temp': forms.TextInput(attrs={
+                'placeholder': '원하는 맛집이 이름을 알려주세요'
             })
         }
 

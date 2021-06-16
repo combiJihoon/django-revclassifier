@@ -3,17 +3,17 @@ from django.core.exceptions import ValidationError
 
 def validate_address1(value):
     if "시" not in value:
-        raise ValidationError("~'시'로 입력하세요", code='invalid')
+        raise ValidationError("~'시'로 입력하세요", code='address1-err')
 
 
 def validate_address2(value):
     if "구" not in value:
-        raise ValidationError("~'구'로 입력하세요", code='invalid')
+        raise ValidationError("~'구'로 입력하세요", code='address2-err')
 
 
 def validate_address3(value):
     if "동" not in value:
-        raise ValidationError("~'동'으로 입력하세요", code='invalid')
+        raise ValidationError("~'동'으로 입력하세요", code='address3-err')
 
 
 def validate_symbols(value):

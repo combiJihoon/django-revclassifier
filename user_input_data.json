@@ -1,0 +1,35 @@
+[
+{
+  "model": "reviews.userinput",
+  "pk": 1,
+  "fields": {
+    "restaurant": "test_restaurant_01",
+    "address1": "test_address1_01",
+    "address2": "test_address2_01",
+    "address3": "test_address3_01",
+    "temp": "test_temp_01"
+  }
+},
+{
+  "model": "reviews.userinput",
+  "pk": 2,
+  "fields": {
+    "restaurant": "test_restaurant_02",
+    "address1": "test_address1_02",
+    "address2": "test_address2_02",
+    "address3": "test_address3_02",
+    "temp": "test_temp_02"
+  }
+},
+{
+  "model": "reviews.userinput",
+  "pk": 3,
+  "fields": {
+    "restaurant": "test_restaurant_03",
+    "address1": "test_address1_03",
+    "address2": "test_address2_03",
+    "address3": "test_address3_03",
+    "temp": "test_temp_03"
+  }
+}
+]

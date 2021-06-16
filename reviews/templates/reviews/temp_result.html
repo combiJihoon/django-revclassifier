@@ -10,6 +10,7 @@
     <h1>카카오 맛집이 맞는지 확인하기</h1>
 </div>
 {% endblock review_header %}
+
 {% block content %}
 <div class="container">
     <h1>{{restaurant}}</h1>
@@ -19,34 +20,25 @@
     {% endfor %}
 </div>
 
+
 <form method="post">{% csrf_token %}
     <div class="submit">
         <input id="submit_btn" type="submit" value="진짜결과확인">
     </div>
     <div class="editor">
-        <p id="r_kakao">{{form.r_kakao}}</p>
-        {% for error in form.r_kakao.errors %}
+        <p id="temp">{{form.temp}}</p>
+        {% for error in form.temp.errors %}
         <p class="error">{{error}}</p>
         {% endfor %}
     </div>
 </form>
+
 {% endblock content %}
 
 
 
 {% comment %}
 {% block content %}
-<form method="post">{% csrf_token %}
-    <div class="submit">
-        <input type="submit" value="맛집확인">
-    </div>
-    <div class="checker">
-        <p>카카오에 검색시 나오는 음식점입니다. 일치하는 곳의 이름을 하나만 적어주세요.</p>
-        {% for r_kakao in restaurant_list %}
-        <p>{{r_kakao}}</p>
-        {% endfor %}
-        <p>{{form.r_kakao}}</p> # models.py에 r_kakao 추가하기
-    </div>
-</form>
+
 {% endblock content %}
 {% endcomment %}

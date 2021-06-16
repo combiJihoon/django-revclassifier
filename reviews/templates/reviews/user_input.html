@@ -4,9 +4,6 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'reviews/css/user_input.css' %}">
 {% endblock css %}
-{% block js %}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-{% endblock js %}
 
 {% block review_header %}
 <div class="container">
@@ -25,17 +22,17 @@
         <p class="error">{{error}}</p>
         {% endfor %}
 
-        <p id="address">{{form.address1}}</p>
+        <p id="address1">{{form.address1}}</p>
         {% for error in form.address1.errors %}
         <p class="error">{{error}}</p>
         {% endfor %}
 
-        <p id="address">{{form.address2}}</p>
+        <p id="address2">{{form.address2}}</p>
         {% for error in form.address2.errors %}
         <p class="error">{{error}}</p>
         {% endfor %}
 
-        <p id="address">{{form.address3}}</p>
+        <p id="address3">{{form.address3}}</p>
         {% for error in form.address3.errors %}
         <p class="error">{{error}}</p>
         {% endfor %}

@@ -1,86 +1,70 @@
 from django.shortcuts import render, redirect
-from .models import Review
-from .forms import ReviewForm
+from .models import UserInput, CrawlResult
+from .forms import UserInputForm
 from .crawler import getDriver, kakao_checker, naver_checker, kakao_crawler
 
 import requests
-import time
-import json
 # Create your views here.
+
+
+def index(request):
+    return redirect('user-input')
 
 
 def user_input(request):
     if request.method == 'POST':
-        input_form = ReviewForm(request.POST)
+        input_form = UserInputForm(request.POST)
         if input_form.is_valid():
-            # 음식점 확인하는 코드 추가하기
+            #     # 음식점 확인하는 코드 추가하기
             new_input = input_form.save()
-
-            return redirect('user_input_kakao', review_id=new_input.id)
+            return redirect('temp-result', user_input_id=new_input.id)
     else:
-        input_form = ReviewForm()
+        input_form = UserInputForm()
     return render(request, 'reviews/user_input.html', {'form': input_form})
 
 
-# def user_input_kakao(request, review_id):
-#     context = dict()
-
-#     review = Review.objects.get(id=review_id)
-#     restaurant = review.restaurant
-#     address = review.address1 + ' ' + review.address2 + ' ' + review.address3
-#     queryInput = address + ' ' + restaurant
-
-#     driver = getDriver()
-#     restaurant_list, driver = kakao_checker(queryInput, driver)
-#     context["restaurant"] = restaurant
-#     context["address"] = address
-#     context["restaurant_list"] = restaurant_list
-
-#     return render(request, 'reviews/user_input_kakao.html', context=context)
-
-global_context = dict()
-
-
-def user_input_kakao(request, review_id):
-    global global_context
+def temp_result(request, user_input_id):
     context = dict()
 
-    review = Review.objects.get(id=review_id)
-    restaurant = review.restaurant
-    address = review.address1 + ' ' + review.address2 + ' ' + review.address3
+    user_input = UserInput.objects.get(id=user_input_id)
+
+    restaurant = user_input.restaurant
+    address = user_input.address1 + ' ' + \
+        user_input.address2 + ' ' + user_input.address3
     queryInput = address + ' ' + restaurant
 
     driver = getDriver()
     restaurant_list, driver = kakao_checker(queryInput, driver)
-
     context["restaurant"] = restaurant
     context["address"] = address
     context["restaurant_list"] = restaurant_list
 
+    driver.quit()
+
     if request.method == 'POST':
-        review_form = ReviewForm(request.POST, instance=review)
-        if review_form.is_valid():
-            review_form.save()
-            # 크롤러 작동
-            time.sleep(3)
-            return redirect('result_kakao', review_id=review.id)
+        input_form = UserInputForm(request.POST, instance=user_input)
+        if input_form.is_valid():
+            input_form.save()
+            return redirect('kakao-result', user_input_id=user_input.id)
     else:
-        review_form = ReviewForm(instance=review)
+        input_form = UserInputForm()
 
-        context["form"] = review_form
+        context["form"] = input_form
 
-    return render(request, 'reviews/user_input_kakao.html', context=context)
+    return render(request, 'reviews/temp_result.html', context=context)
 
 
-def result_kakao(request, review_id):
+def kakao_result(request, user_input_id):
     context = dict()
-    review = Review.objects.get(id=review_id)
 
-    queryInput = review.address1 + ' ' + review.address2 + \
-        ' ' + review.address3 + ' ' + review.restaurant
-    restaurant_check = review.r_kakao
+    user_input = UserInput.objects.get(id=user_input_id)
 
-    # 받은 정보를 이용해 처음부터 크롤링 스타트
+    restaurant = user_input.restaurant
+    address = user_input.address1 + ' ' + \
+        user_input.address2 + ' ' + user_input.address3
+    queryInput = address + ' ' + restaurant
+    restaurant_check = user_input.temp
+
     driver = getDriver()
     restaurant_list, driver = kakao_checker(queryInput, driver)
     final_rating, low_review_info, high_review_info = kakao_crawler(
@@ -90,19 +74,40 @@ def result_kakao(request, review_id):
     context["low_review_info"] = low_review_info
     context["high_review_info"] = high_review_info
 
-    return render(request, 'reviews/result_kakao.html', context=context)
+    return render(request, 'reviews/kakao_result.html', context=context)
 
-    # def user_input_naver(request, review_id):
-    #     context = dict()
 
-    #     review = Review.objects.get(id=review_id)
-    #     restaurant = review.restaurant
-    #     address = review.address
-    #     queryInput = address + restaurant
-    #     restaurant_list, driver = naver_checker(queryInput, driver)
-    #     context["restaurant_list"] = restaurant_list
+# def result_kakao(request, review_id):
+#     context = dict()
+#     review = Info.objects.get(id=review_id)
 
-    #     return render(request, 'reviews/user_input_naver.html', context=context)
+#     queryInput = review.position1 + ' ' + review.position2 + \
+#         ' ' + review.position3 + ' ' + review.name
+#     restaurant_check = review.r_kakao
 
-    # def review_comparison(request):
-    #     review = Review.objects.get(id=review_id)
+#     # 받은 정보를 이용해 처음부터 크롤링 스타트
+#     driver = getDriver()
+#     restaurant_list, driver = kakao_checker(queryInput, driver)
+#     final_rating, low_review_info, high_review_info = kakao_crawler(
+#         restaurant_list, restaurant_check, driver)
+
+#     context["final_rating"] = final_rating
+#     context["low_review_info"] = low_review_info
+#     context["high_review_info"] = high_review_info
+
+#     return render(request, 'reviews/result_kakao.html', context=context)
+
+#     # def user_input_naver(request, review_id):
+#     #     context = dict()
+
+#     #     review = Review.objects.get(id=review_id)
+#     #     restaurant = review.restaurant
+#     #     address = review.address
+#     #     queryInput = address + restaurant
+#     #     restaurant_list, driver = naver_checker(queryInput, driver)
+#     #     context["restaurant_list"] = restaurant_list
+
+#     #     return render(request, 'reviews/user_input_naver.html', context=context)
+
+#     # def review_comparison(request):
+#     #     review = Review.objects.get(id=review_id)
