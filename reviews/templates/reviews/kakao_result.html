@@ -13,13 +13,25 @@
 
 {% block content %}
 <div class="container">
-    <p>총 평점 : {{final_rating}}</p>
+    <p>카카오 총 평점 : {{final_rating_kakao}}</p>
 
-    {% for low in low_review_info%}
+    {% for low in low_review_info_kakao%}
     <p>{{low}}</p>
     {% endfor %}
 
-    {% for high in high_review_info%}
+    {% for high in high_review_info_kakao%}
+    <p>{{high}}</p>
+    {% endfor %}
+</div>
+
+<div class="container">
+    <p>네이버 총 평점 : {{final_rating_naver}}</p>
+
+    {% for low in low_review_info_naver%}
+    <p>{{low}}</p>
+    {% endfor %}
+
+    {% for high in high_review_info_naver%}
     <p>{{high}}</p>
     {% endfor %}
 </div>

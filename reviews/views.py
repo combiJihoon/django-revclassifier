@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect
 from .models import UserInput, CrawlResult
 from .forms import UserInputForm
-from .crawler import getDriver, kakao_checker, naver_checker, kakao_crawler
+from .crawler import *
 
 import requests
+
+from multiprocessing import Process
 # Create your views here.
 
 
@@ -59,20 +61,41 @@ def kakao_result(request, user_input_id):
 
     user_input = UserInput.objects.get(id=user_input_id)
 
+    # queryInput을 만들기 위한 코드
     restaurant = user_input.restaurant
     address = user_input.address1 + ' ' + \
         user_input.address2 + ' ' + user_input.address3
     queryInput = address + ' ' + restaurant
+    # 'temp-list'에서 얻은 POST 결과
     restaurant_check = user_input.temp
 
+    # 전체 크롤링 과정 다시 반복 후 restaurant_list, driver 리턴
     driver = getDriver()
     restaurant_list, driver = kakao_checker(queryInput, driver)
-    final_rating, low_review_info, high_review_info = kakao_crawler(
-        restaurant_list, restaurant_check, driver)
 
-    context["final_rating"] = final_rating
-    context["low_review_info"] = low_review_info
-    context["high_review_info"] = high_review_info
+    # 멀티 프로세싱
+    p1 = Process(target=kakao_crawler, args=(restaurant_list,
+                                             restaurant_check, driver))
+    p2 = Process(target=naver_crawler, args=(restaurant_list,
+                                             restaurant_check, driver))
+
+    p1.start()
+    p2.start()
+
+    p1.join()
+    p2.join()
+
+    # final_rating, low_review_info, high_review_info = kakao_crawler(
+    #    restaurant_list, restaurant_check, driver)
+
+    # 카카오
+    context["final_rating_kakao"] = final_rating_kakao
+    context["low_review_info_kakao"] = low_review_info_kakao
+    context["high_review_info_kakao"] = high_review_info_kakao
+    # 네이버
+    context["final_rating_naver"] = final_rating_naver
+    context["low_review_info_naver"] = low_review_info_naver
+    context["high_review_info_naver"] = high_review_info_naver
 
     return render(request, 'reviews/kakao_result.html', context=context)
 
