@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect
 from .models import UserInput, CrawlResult
 from .forms import UserInputForm
-from .crawler import *
+from .crawler import Crawler
 
 import requests
 
 from multiprocessing import Process
 # Create your views here.
+
+crawler = Crawler()
 
 
 def index(request):
@@ -26,6 +28,8 @@ def user_input(request):
 
 
 def temp_result(request, user_input_id):
+    global crawler
+
     context = dict()
 
     user_input = UserInput.objects.get(id=user_input_id)
@@ -35,13 +39,18 @@ def temp_result(request, user_input_id):
         user_input.address2 + ' ' + user_input.address3
     queryInput = address + ' ' + restaurant
 
-    driver = getDriver()
-    restaurant_list, driver = kakao_checker(queryInput, driver)
+    crawler.kakao_checker(queryInput)
+    restaurant_list_kakao = crawler.restaurant_list_kakao
+
+    # crawler.kakao_crawler(restaurant_check)
+
+    # driver = getDriver()
+    # restaurant_list, driver = kakao_checker(queryInput, driver)
     context["restaurant"] = restaurant
     context["address"] = address
-    context["restaurant_list"] = restaurant_list
+    context["restaurant_list"] = restaurant_list_kakao
 
-    driver.quit()
+    # driver.quit()
 
     if request.method == 'POST':
         input_form = UserInputForm(request.POST, instance=user_input)
@@ -57,6 +66,8 @@ def temp_result(request, user_input_id):
 
 
 def kakao_result(request, user_input_id):
+    global crawler
+
     context = dict()
 
     user_input = UserInput.objects.get(id=user_input_id)
@@ -69,35 +80,40 @@ def kakao_result(request, user_input_id):
     # 'temp-list'에서 얻은 POST 결과
     restaurant_check = user_input.temp
 
-    # 전체 크롤링 과정 다시 반복 후 restaurant_list, driver 리턴
-    driver = getDriver()
-    restaurant_list, driver = kakao_checker(queryInput, driver)
+    # 크롤러 작동
+    jobs = []
 
-    # 멀티 프로세싱
-    p1 = Process(target=kakao_crawler, args=(restaurant_list,
-                                             restaurant_check, driver))
-    p2 = Process(target=naver_crawler, args=(restaurant_list,
-                                             restaurant_check, driver))
+    kakao_crawler = crawler.kakao_crawler(restaurant_check)
+    naver_crawler = crawler.naver_crawler(restaurant_check)
 
-    p1.start()
-    p2.start()
+    q = crawler.q
 
-    p1.join()
-    p2.join()
+    crawlers = [kakao_crawler, naver_crawler]
 
-    # final_rating, low_review_info, high_review_info = kakao_crawler(
-    #    restaurant_list, restaurant_check, driver)
+    for crawler in crawlers:
+        p = Process(target=crawler)
+        jobs.append(p)
+        p.start()
 
-    # 카카오
-    context["final_rating_kakao"] = final_rating_kakao
-    context["low_review_info_kakao"] = low_review_info_kakao
-    context["high_review_info_kakao"] = high_review_info_kakao
-    # 네이버
-    context["final_rating_naver"] = final_rating_naver
-    context["low_review_info_naver"] = low_review_info_naver
-    context["high_review_info_naver"] = high_review_info_naver
+    for p in jobs:
+        p.join()
+        p.close()
 
-    return render(request, 'reviews/kakao_result.html', context=context)
+    result = [q.get() for j in jobs]
+
+
+// TODO q 값 지정해서 각각 카카오, 네이버 context에 넣기 & views.py 저장하면 크롤러 바로 실행되는 문제 해결하기
+
+# 카카오
+context["final_rating_kakao"] = final_rating_kakao
+context["low_review_info_kakao"] = low_review_info_kakao
+context["high_review_info_kakao"] = high_review_info_kakao
+# 네이버
+context["final_rating_naver"] = final_rating_naver
+context["low_review_info_naver"] = low_review_info_naver
+context["high_review_info_naver"] = high_review_info_naver
+
+return render(request, 'reviews/kakao_result.html', context=context)
 
 
 # def result_kakao(request, review_id):
@@ -120,17 +136,17 @@ def kakao_result(request, user_input_id):
 
 #     return render(request, 'reviews/result_kakao.html', context=context)
 
-#     # def user_input_naver(request, review_id):
-#     #     context = dict()
+# def user_input_naver(request, review_id):
+#     context = dict()
 
-#     #     review = Review.objects.get(id=review_id)
-#     #     restaurant = review.restaurant
-#     #     address = review.address
-#     #     queryInput = address + restaurant
-#     #     restaurant_list, driver = naver_checker(queryInput, driver)
-#     #     context["restaurant_list"] = restaurant_list
+#     review = Review.objects.get(id=review_id)
+#     restaurant = review.restaurant
+#     address = review.address
+#     queryInput = address + restaurant
+#     restaurant_list, driver = naver_checker(queryInput, driver)
+#     context["restaurant_list"] = restaurant_list
 
-#     #     return render(request, 'reviews/user_input_naver.html', context=context)
+#     return render(request, 'reviews/user_input_naver.html', context=context)
 
-#     # def review_comparison(request):
-#     #     review = Review.objects.get(id=review_id)
+# def review_comparison(request):
+#     review = Review.objects.get(id=review_id)

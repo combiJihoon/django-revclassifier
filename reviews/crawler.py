@@ -37,7 +37,7 @@ class Crawler:
         self.driver_naver = webdriver.Chrome(
             r"/Users/jihun/Mywork/django-project/revclassifier/chromedriver")
 
-        self.test = []
+        # self.test = []
         self.q = multiprocessing.Queue()
         self.result_dict = dict()
 
@@ -180,11 +180,11 @@ class Crawler:
         self.result_dict["high_review_info_kakao"] = high_review_info
 
         '''테스트용'''
-        self.result_dict["review_info_kakao"] = review_info
-        self.test.append(self.result_dict)
+        # self.result_dict["review_info_kakao"] = review_info
+        # self.test.append(self.result_dict)
 
         '''배포용'''
-        # self.q.put(self.result_dict)
+        self.q.put(self.result_dict)
 
     def naver_checker(self, queryInput):
         # plusUrl = '마북동 전주콩나물해장국'
