@@ -8,8 +8,6 @@ import requests
 from multiprocessing import Process
 # Create your views here.
 
-crawler = Crawler()
-
 
 def index(request):
     return redirect('user-input')
@@ -28,7 +26,7 @@ def user_input(request):
 
 
 def temp_result(request, user_input_id):
-    global crawler
+    crawler = Crawler()
 
     context = dict()
 
@@ -66,7 +64,6 @@ def temp_result(request, user_input_id):
 
 
 def kakao_result(request, user_input_id):
-    global crawler
 
     context = dict()
 
@@ -80,9 +77,12 @@ def kakao_result(request, user_input_id):
     # 'temp-list'에서 얻은 POST 결과
     restaurant_check = user_input.temp
 
+    # TODO 크롤러 잘 작동하는지 확인하기
+    crawler = Crawler()
+    crawler.kakao_checker(queryInput)  # naver_list 생성
+    crawler.naver_checker(queryInput)  # kakao_list 생성
     # 크롤러 작동
     jobs = []
-
     kakao_crawler = crawler.kakao_crawler(restaurant_check)
     naver_crawler = crawler.naver_crawler(restaurant_check)
 
@@ -100,20 +100,19 @@ def kakao_result(request, user_input_id):
         p.close()
 
     result = [q.get() for j in jobs]
+    kakao_result_dict = result[0]
+    naver_result_dict = result[1]
 
+    # 카카오
+    context["final_rating_kakao"] = kakao_result_dict["final_rating_kakao"]
+    context["low_review_info_kakao"] = kakao_result_dict["low_review_info_kakao"]
+    context["high_review_info_kakao"] = kakao_result_dict["high_review_info_kakao"]
+    # 네이버
+    context["final_rating_naver"] = naver_result_dict["final_rating_naver"]
+    context["low_review_info_naver"] = naver_result_dict["low_review_info_naver"]
+    context["high_review_info_naver"] = naver_result_dict["high_review_info_naver"]
 
-// TODO q 값 지정해서 각각 카카오, 네이버 context에 넣기 & views.py 저장하면 크롤러 바로 실행되는 문제 해결하기
-
-# 카카오
-context["final_rating_kakao"] = final_rating_kakao
-context["low_review_info_kakao"] = low_review_info_kakao
-context["high_review_info_kakao"] = high_review_info_kakao
-# 네이버
-context["final_rating_naver"] = final_rating_naver
-context["low_review_info_naver"] = low_review_info_naver
-context["high_review_info_naver"] = high_review_info_naver
-
-return render(request, 'reviews/kakao_result.html', context=context)
+    return render(request, 'reviews/kakao_result.html', context=context)
 
 
 # def result_kakao(request, review_id):
@@ -147,6 +146,7 @@ return render(request, 'reviews/kakao_result.html', context=context)
 #     context["restaurant_list"] = restaurant_list
 
 #     return render(request, 'reviews/user_input_naver.html', context=context)
+
 
 # def review_comparison(request):
 #     review = Review.objects.get(id=review_id)

@@ -107,7 +107,7 @@ class Crawler:
             ratings = soup.select('.grade_star')
             final_rating = ratings[1].text
         except:
-            return ''
+            return 0
 
         count = 0
 
@@ -224,7 +224,7 @@ class Crawler:
                 '._1kUrA')
             final_rating = ratings[0].text[2:6]
         except:
-            return ''
+            return 0
 
         # '스타벅스' 같은 경우 메뉴 바에 '선물하기'가 있어 '리뷰' 메뉴의 위치가 달라지게 된다.
         # 따라서, 아래와 같이 try & except로 예외처리를 한다.
