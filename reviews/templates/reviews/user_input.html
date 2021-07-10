@@ -40,27 +40,3 @@
 </form>
 {% endblock content %}
 
-{% comment %} <script>
-    $('#submit_btn').click(function () {
-                let input1 = $('#restaurant').val();
-                let input2 = $('#address').val();
-                $.ajax({
-                    url: {
-                        %
-                        url 'user_input_kakao'
-                        review.id %
-                    }, //보낼 유알엘 넣기
-                    type: 'get',
-                    data: {
-                        'restaurant': input1,
-                        'adress': input2
-                    },
-                    dataType: 'json',
-                }).done(function (data) {
-                    console.log(data);
-                    //성공시 코드 짜기
-                }).fail(function (err) {
-                        console.log(err, "!!!!!!!!!!");
-                    );
-                } //버튼클릭이벤트 end
-</script> {% endcomment %}

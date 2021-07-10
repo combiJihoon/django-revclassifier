@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'reviews/css/user_input.css' %}">
+<link rel="stylesheet" href="{% static 'reviews/css/temp_result.css' %}">
 {% endblock css %}
 
 {% block review_header %}
@@ -22,14 +22,14 @@
 
 
 <form method="post">{% csrf_token %}
-    <div class="submit">
-        <input id="submit_btn" type="submit" value="진짜결과확인">
-    </div>
     <div class="editor">
         <p id="temp">{{form.temp}}</p>
         {% for error in form.temp.errors %}
         <p class="error">{{error}}</p>
         {% endfor %}
+    </div>
+    <div class="submit">
+        <input id="submit_btn" type="submit" value="리뷰 확인하기">
     </div>
 </form>
 

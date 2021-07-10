@@ -1,3 +1,5 @@
+# TODO 크롤링 속도 높이기 : 리뷰 수가 100개 이상이면 100개까지면 살피기
+# TODO 병렬적으로 이루어지는 것이라면 큐를 써보는 것은 어떨런지?
 import os
 import time
 import requests
@@ -27,15 +29,16 @@ from multiprocessing import freeze_support, Process
 
 
 class Crawler:
-    def __init__(self, queryInput=None, restaruant_check=None):
-        # 받은 리스트의 순서가 다르기 때문에 'kakao'에서 'restaurant_check' 얻은 것만 동일하게 사용할
-        self.restaurant_list_kakao = []
-        self.restaurant_list_naver = []
-        # self.restaurant_check = ''
+    def __init__(self, queryInput=None, restaruant_check=None, retaurant_check=None):
         self.driver_kakao = webdriver.Chrome(
             r"/Users/jihun/Mywork/django-project/revclassifier/chromedriver")
         self.driver_naver = webdriver.Chrome(
             r"/Users/jihun/Mywork/django-project/revclassifier/chromedriver")
+        # 받은 리스트의 순서가 다르기 때문에 'kakao'에서 'restaurant_check' 얻은 것만 동일하게 사용
+        self.restaurant_list_kakao = []
+        self.restaurant_list_naver = []
+        self.queryInput = queryInput
+        self.restaurant_check = retaurant_check
 
         # self.test = []
         self.q = multiprocessing.Queue()
@@ -50,13 +53,13 @@ class Crawler:
         options.add_argument("disable-gpu")
 
     # 음식점 리스트 리턴
-    def kakao_checker(self, queryInput):
+    def kakao_checker(self):
         driver = self.driver_kakao
 
         driver.get(self.kakao)
         # kakaomap review 찾기
         driver.find_element_by_css_selector(
-            '.query.tf_keyword').send_keys(queryInput)
+            '.query.tf_keyword').send_keys(self.queryInput)
         driver.find_element_by_css_selector(
             '.query.tf_keyword').send_keys(Keys.ENTER)
         time.sleep(2)
@@ -72,6 +75,7 @@ class Crawler:
         # self.driver_kakao.quit()
 
     def kakao_crawler(self, restaurant_check):
+        self.restaurant_check = restaurant_check
 
         action = ActionChains(self.driver_kakao)
         my_xpath = restaurant_check
@@ -105,9 +109,9 @@ class Crawler:
         # 총 평점 출력
         try:
             ratings = soup.select('.grade_star')
-            final_rating = ratings[1].text
+            final_rating = float(ratings[1].text)
         except:
-            return 0
+            final_rating = 0
 
         count = 0
 
@@ -186,9 +190,9 @@ class Crawler:
         '''배포용'''
         self.q.put(self.result_dict)
 
-    def naver_checker(self, queryInput):
+    def naver_checker(self):
         # plusUrl = '마북동 전주콩나물해장국'
-        url = self.naver + queryInput
+        url = self.naver + self.queryInput
         self.driver_naver.get(url)
 
         # 원하는 음식점이 맞는지 확인 : 음식점 리스트 출력 및 선택
@@ -202,6 +206,8 @@ class Crawler:
             self.restaurant_list_naver.append(restaurant.text)
 
     def naver_crawler(self, restaurant_check):
+        self.restaurant_check = restaurant_check
+
         my_xpath = restaurant_check
 
         if self.restaurant_list_naver.count(restaurant_check) >= 2:
@@ -222,9 +228,9 @@ class Crawler:
         try:
             ratings = soup.select(
                 '._1kUrA')
-            final_rating = ratings[0].text[2:6]
+            final_rating = float(ratings[0].text[2:6])
         except:
-            return 0
+            final_rating = 0
 
         # '스타벅스' 같은 경우 메뉴 바에 '선물하기'가 있어 '리뷰' 메뉴의 위치가 달라지게 된다.
         # 따라서, 아래와 같이 try & except로 예외처리를 한다.
@@ -327,3 +333,30 @@ class Crawler:
             temp.append(date)
             review_info.append(temp)
             count += 1
+
+
+class MultiProcessing:
+    def __init__(self):
+        self.jobs = []
+
+    def multiCrawler(self, ):
+        crawler = Crawler()
+        q = crawler.q
+
+        crawlers = [
+            crawler.kakao_crawler(crawler.restaurant_check),
+            crawler.naver_crawler(crawler.restaurant_check)
+        ]
+
+        for crawler in crawlers:
+            p = Process(target=crawler)
+            self.jobs.append(p)
+            p.start()
+
+        for p in self.jobs:
+            p.join()
+            p.close()
+
+        result = [q.get() for j in self.jobs]
+
+        return result

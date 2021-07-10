@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect
 from .models import UserInput, CrawlResult
 from .forms import UserInputForm
-from .crawler import Crawler
+from .crawler import Crawler, MultiProcessing
 
 import requests
 
 from multiprocessing import Process
 # Create your views here.
+
+# TODO view를 클래스로 바꾸어서 인자들이 재사용 가능하도록 바꿀 것
 
 
 def index(request):
@@ -17,7 +19,7 @@ def user_input(request):
     if request.method == 'POST':
         input_form = UserInputForm(request.POST)
         if input_form.is_valid():
-            #     # 음식점 확인하는 코드 추가하기
+            # 음식점 확인하는 코드 추가하기
             new_input = input_form.save()
             return redirect('temp-result', user_input_id=new_input.id)
     else:
@@ -26,24 +28,24 @@ def user_input(request):
 
 
 def temp_result(request, user_input_id):
-    crawler = Crawler()
-
     context = dict()
 
+    # 모델 정보 가져오기
     user_input = UserInput.objects.get(id=user_input_id)
 
+    # 검색 정보
     restaurant = user_input.restaurant
     address = user_input.address1 + ' ' + \
         user_input.address2 + ' ' + user_input.address3
     queryInput = address + ' ' + restaurant
 
-    crawler.kakao_checker(queryInput)
+    # 크롤러 실행 : 맛집 리스트 가져오기
+    crawler = Crawler(queryInput=queryInput)
+    crawler.kakao_checker()
+
+    # 중간 결과
     restaurant_list_kakao = crawler.restaurant_list_kakao
 
-    # crawler.kakao_crawler(restaurant_check)
-
-    # driver = getDriver()
-    # restaurant_list, driver = kakao_checker(queryInput, driver)
     context["restaurant"] = restaurant
     context["address"] = address
     context["restaurant_list"] = restaurant_list_kakao
@@ -74,32 +76,16 @@ def kakao_result(request, user_input_id):
     address = user_input.address1 + ' ' + \
         user_input.address2 + ' ' + user_input.address3
     queryInput = address + ' ' + restaurant
+
     # 'temp-list'에서 얻은 POST 결과
     restaurant_check = user_input.temp
 
-    # TODO 크롤러 잘 작동하는지 확인하기
-    crawler = Crawler()
+    crawler = Crawler(restaurant_check)
     crawler.kakao_checker(queryInput)  # naver_list 생성
     crawler.naver_checker(queryInput)  # kakao_list 생성
-    # 크롤러 작동
-    jobs = []
-    kakao_crawler = crawler.kakao_crawler(restaurant_check)
-    naver_crawler = crawler.naver_crawler(restaurant_check)
 
-    q = crawler.q
-
-    crawlers = [kakao_crawler, naver_crawler]
-
-    for crawler in crawlers:
-        p = Process(target=crawler)
-        jobs.append(p)
-        p.start()
-
-    for p in jobs:
-        p.join()
-        p.close()
-
-    result = [q.get() for j in jobs]
+    mp = MultiProcessing()
+    result = mp.multiCrawler()
     kakao_result_dict = result[0]
     naver_result_dict = result[1]
 
