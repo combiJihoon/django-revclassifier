@@ -29,7 +29,7 @@ from multiprocessing import freeze_support, Process
 
 
 class Crawler:
-    def __init__(self, queryInput=None, restaruant_check=None, retaurant_check=None):
+    def __init__(self, restaruant_check=None, retaurant_check=None):
         self.driver_kakao = webdriver.Chrome(
             r"/Users/jihun/Mywork/django-project/revclassifier/chromedriver")
         self.driver_naver = webdriver.Chrome(
@@ -37,11 +37,12 @@ class Crawler:
         # 받은 리스트의 순서가 다르기 때문에 'kakao'에서 'restaurant_check' 얻은 것만 동일하게 사용
         self.restaurant_list_kakao = []
         self.restaurant_list_naver = []
-        self.queryInput = queryInput
+        self.queryInput = None
         self.restaurant_check = retaurant_check
 
         # self.test = []
         self.q = multiprocessing.Queue()
+
         self.result_dict = dict()
 
         self.kakao = 'https://map.kakao.com/'
@@ -53,7 +54,8 @@ class Crawler:
         options.add_argument("disable-gpu")
 
     # 음식점 리스트 리턴
-    def kakao_checker(self):
+    def kakao_checker(self, queryInput):
+        self.queryInput = queryInput
         driver = self.driver_kakao
 
         driver.get(self.kakao)
@@ -190,8 +192,9 @@ class Crawler:
         '''배포용'''
         self.q.put(self.result_dict)
 
-    def naver_checker(self):
+    def naver_checker(self, queryInput):
         # plusUrl = '마북동 전주콩나물해장국'
+        self.queryInput = queryInput
         url = self.naver + self.queryInput
         self.driver_naver.get(url)
 
@@ -339,13 +342,13 @@ class MultiProcessing:
     def __init__(self):
         self.jobs = []
 
-    def multiCrawler(self, ):
+    # 동시 진행은 두개까지만 하도록 한다.
+    def multiCrawler(self, first, second):
         crawler = Crawler()
         q = crawler.q
 
         crawlers = [
-            crawler.kakao_crawler(crawler.restaurant_check),
-            crawler.naver_crawler(crawler.restaurant_check)
+            first, second
         ]
 
         for crawler in crawlers:
@@ -360,3 +363,18 @@ class MultiProcessing:
         result = [q.get() for j in self.jobs]
 
         return result
+
+
+# 크롤러의 Multiprocessing 사용법
+# Multiprocessing.multicrawler(
+#    crawler.kakao_crawler(crawler.restaurant_check),
+#    crawler.naver_crawler(crawler.restaurant_check)
+# )
+
+
+# resaurant_list 구하기 위한 Multiprocessing 사용법
+# Multiprocessing.multicrawler(
+#    crawler.kakao_checker(),
+#    crawler.kakao_checker()
+# )
+# -> 이 방법을 통해 retaurant_list를 리턴할 수 있다.
