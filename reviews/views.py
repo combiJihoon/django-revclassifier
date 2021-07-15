@@ -51,6 +51,7 @@ def temp_result(request, user_input_id):
     crawler.driver_kakao.quit()
 
     if request.method == 'POST':
+        # form 수정 메소드와 동일
         input_form = UserInputForm(request.POST, instance=user_input)
         if input_form.is_valid():
             input_form.save()
@@ -65,7 +66,7 @@ def temp_result(request, user_input_id):
     return render(request, 'reviews/temp_result.html', context=context)
 
 
-def kakao_result(request, user_input_id):
+def result(request, user_input_id):
     context = dict()
     user_input = UserInput.objects.get(id=user_input_id)
 
@@ -78,24 +79,47 @@ def kakao_result(request, user_input_id):
     # 'temp-list'에서 얻은 POST 결과
     restaurant_check = user_input.temp
 
-    crawler = Crawler(restaurant_check)
+    crawler = Crawler()
     crawler.kakao_checker(queryInput)  # naver_list 생성
     crawler.naver_checker(queryInput)  # kakao_list 생성
 
-    mp = MultiProcessing()
-    result = mp.multiCrawler(crawler.kakao_crawler(user_input.temp),
-                             crawler.naver_crawler(user_input.temp))
-    kakao_result_dict = result[0]
-    naver_result_dict = result[1]
+    # Multiprocessing 시작
+    jobs = []
+
+    q = crawler.q
+
+    crawlers = [
+        crawler.kakao_crawler(
+            restaurant_check), crawler.naver_crawler(restaurant_check)
+    ]
+
+    for crawler in crawlers:
+        p = Process(target=crawler)
+        jobs.append(p)
+        p.start()
+
+    for p in jobs:
+        p.join()
+        p.close()
+
+    result = [q.get() for j in jobs]
+
+    # mp = MultiProcessing()
+    # result = mp.multiCrawler(crawler.kakao_crawler(user_input.temp),
+    #                          crawler.naver_crawler(user_input.temp))
+    # kakao_result_dict = result[0]
+    # naver_result_dict = result[1]
+
+    print(result)
 
     # 카카오
-    context["final_rating_kakao"] = kakao_result_dict["final_rating_kakao"]
-    context["low_review_info_kakao"] = kakao_result_dict["low_review_info_kakao"]
-    context["high_review_info_kakao"] = kakao_result_dict["high_review_info_kakao"]
+    context["final_rating_kakao"] = result[0]["final_rating_kakao"]
+    context["low_review_info_kakao"] = result[0]["low_review_info_kakao"]
+    context["high_review_info_kakao"] = result[0]["high_review_info_kakao"]
     # 네이버
-    context["final_rating_naver"] = naver_result_dict["final_rating_naver"]
-    context["low_review_info_naver"] = naver_result_dict["low_review_info_naver"]
-    context["high_review_info_naver"] = naver_result_dict["high_review_info_naver"]
+    context["final_rating_naver"] = result[1]["final_rating_naver"]
+    context["low_review_info_naver"] = result[1]["low_review_info_naver"]
+    context["high_review_info_naver"] = result[1]["high_review_info_naver"]
 
     return render(request, 'reviews/kakao_result.html', context=context)
 
